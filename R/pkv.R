@@ -8,6 +8,7 @@ if(!require(devtools)) {install.packages("devtools"); require(devtools)}
 if(!require(Rcpp)) {    install.packages("Rcpp");     require(Rcpp)}
 if(!require(roxygen2)) {install.packages("roxygen2"); require(roxygen2)}
 if(!require(shiny)) {   install.packages("shiny");    require(shiny)}
+if(!require(miniUI)) {   install.packages("miniUI");    require(miniUI)}
 if(!require(haven)) {   install.packages("haven");    require(haven)}
 if(!require(foreign)) { install.packages("foreign");  require(foreign)}
 if(!require(DT)) {      install.packages("DT");       require(DT)}
@@ -17,6 +18,7 @@ library(Rcpp)
 library(devtools)
 library(roxygen2)
 library(shiny)
+library(miniUI)
 library(haven)
 library(foreign)
 library(DT)
@@ -346,6 +348,59 @@ shiny_pkv <- function(options = c("sas2csv","nm_dataviz", "none")){
     }
     shinyApp(ui = ui, server = server)
   }
+}
+  sas2csv <- function() {
+  library(shiny)
+    library(miniUI)
+    server <- function(input, output) {
+      #Input the uploaded file to a reactive function#
+      con<-reactive({
+        inFile <- input$file1
+        if (is.null(inFile))
+          return(NULL)
+        substrRight <- function(inFile, n){
+          substr(inFile, nchar(inFile)-n+1, nchar(inFile))
+        }
+
+        type= substrRight(input$file1, 4)
+        if(type==".xpt")
+        {read.xport(inFile$datapath)}
+        else {read_sas(inFile$datapath, catalog_file = NULL, encoding = NULL)}
+      })
+
+      #Input the contents as a table to visualize#
+      df <- reactive({data <-con()})
+
+      output$contents <- DT::renderDataTable( con(),filter = 'top')
+
+      #Download data#
+      output$downloadData <- downloadHandler(
+        filename = function() { paste("data", '.csv', sep='') },
+        content = function(file) {
+          write.csv(df(), file)
+        })
+    }
+
+    #########################
+    #          ui.R         #
+    #########################
+
+    ui <- fluidPage(
+      titlePanel("Convert .sas/.xpt to .csv file"),
+      sidebarLayout(
+        sidebarPanel(
+          fileInput('file1', 'Choose .sas or .xpt File',
+                    accept=c( '.sas7bdat','.sas','.xpt')),
+
+          tags$hr(),
+          downloadButton('downloadData', 'Download.csv')
+
+        ),mainPanel( DT::dataTableOutput("contents"))
+      ))
+    # We'll use a pane viwer, and set the minimum height at
+    # 300px to ensure we get enough screen space to display the clock.
+    viewer <- paneViewer(300)
+    runGadget( ui, server, viewer = viewer)
 }
 
 #devtools::install()
