@@ -2,3 +2,8 @@ Name: sas2csv
 Description: Converts sas files to csv files
 Binding: sas2csv
 Interactive: true
+
+Name: nm_dataviz
+Description: NONMEM dataset visualization 
+Binding: nm_dataviz
+Interactive: true
