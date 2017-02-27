@@ -1,9 +1,13 @@
 Package: shinypkv
 Type: Package
-Title: What the Package Does (Title Case)
+Title: shinypkv
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Author: Pragathi Kotha Venkata  
+Maintainer: Pragathi Kotha Venkata  <pragathi1991@gmail.com>
+Description: Shiny PK visualizations
+License: R 3.3.2
 LazyData: TRUE
+Imports:
+  shiny (>= 0.13),
+  miniUI (>= 0.1.1),
+  rstudioapi (>= 0.5)
