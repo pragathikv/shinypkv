@@ -478,6 +478,8 @@ nm_dataviz <- function() {
         ifelse( s1==1,names(data_)[names(data_) == 'reg'] <- 'period',names(data_)[names(data_) == 'period'] <- 'period')
         ifelse( s1==1,names(data_)[names(data_) == 'REGIMEN'] <- 'period',names(data_)[names(data_) == 'period'] <- 'period')
         ifelse( s1==1,names(data_)[names(data_) == 'regimen'] <- 'period',names(data_)[names(data_) == 'period'] <- 'period')
+        ifelse( s1==1,names(data_)[names(data_) == 'OCC'] <- 'period',names(data_)[names(data_) == 'period'] <- 'period')
+        ifelse( s1==1,names(data_)[names(data_) == 'occ'] <- 'period',names(data_)[names(data_) == 'period'] <- 'period')
       }
       
       data<-data_
