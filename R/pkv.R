@@ -25,7 +25,9 @@ library(DT)
 library(ggplot2)
 
 shiny_pkv <- function(options = c("sas2csv","nm_dataviz", "none")){
-
+library(haven)
+library(foreign)
+library(DT)
   if (options=="none") {return(NULL)}
 
   else if(options=="sas2csv") {
@@ -358,6 +360,9 @@ shiny_pkv <- function(options = c("sas2csv","nm_dataviz", "none")){
   sas2csv <- function() {
   library(shiny)
     library(miniUI)
+    library(haven)
+  library(foreign)
+  library(DT)
     server <- function(input, output) {
       #Input the uploaded file to a reactive function#
       con<-reactive({
