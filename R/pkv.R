@@ -875,6 +875,7 @@ ui <- fluidPage(
 #Server interface#
 
 server <-function(input, output, session) {
+  library(ggplot2)
   con<-reactive({
     inFile <- input$file1
     if (is.null(inFile))
