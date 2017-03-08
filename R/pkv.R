@@ -35,7 +35,9 @@ shiny_pkv <- function(options = c("sas2csv","nm_dataviz", "none")){
   if (options=="none") {return(NULL)}
 
   else if(options=="sas2csv") {
-
+library(haven)
+library(foreign)
+library(DT)
     server <- function(input, output) {
       #Input the uploaded file to a reactive function#
       con<-reactive({
