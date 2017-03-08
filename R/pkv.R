@@ -360,7 +360,18 @@ shiny_pkv <- function(options = c("sas2csv","nm_dataviz", "none")){
     }
     shinyApp(ui = ui, server = server)
   }
-   else if(options=="dose_cvst"){    
+   else if(options=="dose_cvst"){   
+     library(ggplot2)
+      transparent_theme <- theme(
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(), 
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.line = element_blank(),
+        panel.background = element_rect(fill = "transparent",colour = NA),
+        plot.background = element_rect(fill = "transparent",colour = NA))
      ui <- fluidPage(
   titlePanel("Conc Vs Time by Dose"),
   sidebarLayout(
