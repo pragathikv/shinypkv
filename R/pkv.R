@@ -13,6 +13,9 @@ if(!require(haven)) {   install.packages("haven");    require(haven)}
 if(!require(foreign)) { install.packages("foreign");  require(foreign)}
 if(!require(DT)) {      install.packages("DT");       require(DT)}
 if(!require(ggplot2)) { install.packages("ggplot2");  require(ggplot2)}
+if(!require(rmarkdown)) { install.packages("rmarkdown");  require(rmarkdown)}
+if(!require(evaluate)) { install.packages("evaluate");  require(evaluate)}
+if(!require(pander)) { install.packages("pander");  require(pander)}
 
 library(Rcpp)
 library(devtools)
@@ -23,6 +26,9 @@ library(haven)
 library(foreign)
 library(DT)
 library(ggplot2)
+library(rmarkdown)
+library(evaluate)
+library(pander)
 
 shiny_pkv <- function(options = c("sas2csv","nm_dataviz", "none")){
 
@@ -354,6 +360,143 @@ shiny_pkv <- function(options = c("sas2csv","nm_dataviz", "none")){
     }
     shinyApp(ui = ui, server = server)
   }
+   else if(options=="dose_conc_time"){    
+     ui <- fluidPage(
+  titlePanel("Conc Vs Time by Dose"),
+  sidebarLayout(
+    sidebarPanel(
+      fileInput('file1', 'Choose CSV File',
+                accept=c('text/csv','text/comma-separated-values,text/plain', '.csv')),
+      
+      
+      tags$hr(),
+      
+      uiOutput("CID")),
+    mainPanel(
+      plotOutput("plotind", height=300,click = "plot_click"),
+      h4("Data points"),
+      tableOutput("plot_clickedpoints1"),
+      tabsetPanel(
+        tabPanel("Reporting", downloadButton('report','Download plots .pdf')))
+    ))
+)
+
+#Server interface#
+
+server <-function(input, output, session) {
+  con<-reactive({
+    inFile <- input$file1
+    if (is.null(inFile))
+      return(NULL)
+    read.csv(inFile$datapath)
+    
+  }) 
+  
+  output$CID <- renderUI({
+    df <-con()
+    if (is.null(df)) return(NULL)
+    CID<-unique(df$CID)
+    selectInput("CID", "CID:",CID)})
+  
+  #plot ind function#
+  
+  output$plotind <- renderPlot({
+    inFile <- input$file1
+    if (is.null(inFile)==TRUE) {print(NULL) }
+    else if (is.null(inFile)==FALSE) {
+      transparent_theme <- theme(
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(), 
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.line = element_blank(),
+        panel.background = element_rect(fill = "transparent",colour = NA),
+        plot.background = element_rect(fill = "transparent",colour = NA))
+      #Create the graphs :
+      data2<-read.csv(inFile$datapath) 
+      #data2<- read.csv("W:/GSK1265744/LA200056-LATTE2/Output/PopPK.csv")
+      data2$RTFD<-as.numeric(data2$RTFD)
+      data2$CONC<-as.numeric(data2$CONC)
+      data_ <- subset(data2 , DOSE!=-99)
+      data<-subset(data_ , EVID==1)
+      
+      dat1 <- subset(data, CID==input$CID)
+      #dat1 <- subset(data, CID==1)
+      
+      newdata2 <- subset(data_ , EVID==0)
+      dat2 <- subset(newdata2, CID==input$CID)
+      #dat2 <- newdata2
+      
+      library(ggplot2)
+      p0<-ggplot(dat2, aes(x=dat2$RTFD, y=dat2$CONC)) + geom_point(shape =4) +
+        labs(x="Relative Time from First Dose (Hrs)",y="Concentration (ng/L)") 
+      p1 <- p0 + theme_bw() +
+        theme(axis.line = element_line(colour = "black"),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              panel.background = element_blank(),
+              legend.position = "none")  
+      p1 
+      
+      p2 <- ggplot(dat1, aes(x=dat1$RTFD, y=dat1$DOSE)) + geom_bar(stat = "identity", width=0.01,colour="green") +
+        transparent_theme
+      p2_grob = ggplotGrob(p2)
+      
+      p1 + annotation_custom(grob = p2_grob)
+    }})
+
+  con1<-reactive({
+    data2<-con()
+    data2$RTFD<-as.numeric(data2$RTFD)
+    data2$CONC<-as.numeric(data2$CONC)
+    data2$DOSE<-as.numeric(data2$DOSE)
+    data_ <- subset(data2 , data2$DOSE!=-99)
+    data<-subset(data_ , data_$EVID==1)
+    
+    dat1 <- subset(data, data$CID==input$CID)
+    
+    newdata2 <- subset(data_ , data_$EVID==0)
+    dat2 <- subset(newdata2, newdata2$CID==input$CID)
+    dat2
+  })
+  
+  #Hovering #
+  
+  output$plot_clickedpoints1 <- renderTable({
+    #inFile <- input$file1
+    inFile<-con()
+    
+    if (is.null(inFile)==TRUE) {print(NULL) }
+    else if (is.null(inFile)==FALSE) {
+      res <- nearPoints(con1(), input$plot_click,"RTFD","CONC", )
+      if (nrow(res) == 0)
+        return()
+      res
+    }})
+  
+  #Download Visulizations in PDF
+  output$report = downloadHandler(
+    
+    filename = 'myreport.pdf',
+    content = function(file) {
+      data <-con()
+      #install.packages("rmarkdown")
+      library(rmarkdown)
+      library(evaluate)
+      library(pander)
+      out <- render('inppk.Rmd',pdf_document())
+      file.rename(out, file) 
+    },
+    contentType = 'application/pdf'
+  )
+  
+}
+
+#Final run#
+shinyApp(ui = ui, server = server)
+     }
 }
   sas2csv <- function() {
   library(shiny)
@@ -699,3 +842,150 @@ nm_dataviz <- function() {
 #shiny_pkv(options="sas2csv")
 #shiny_pkv(options="none")
 #shiny_pkv(options="nm_dataviz")
+
+dose_conc_time <- function() {
+  library(shiny)
+  library(ggplot2)
+  library(rmarkdown)
+  library(evaluate)
+  library(pander)
+#User interface#
+#setwd("C:/Users/pk153230/Desktop/R-Demo/Archive/")
+ui <- fluidPage(
+  titlePanel("Conc Vs Time by Dose"),
+  sidebarLayout(
+    sidebarPanel(
+      fileInput('file1', 'Choose CSV File',
+                accept=c('text/csv','text/comma-separated-values,text/plain', '.csv')),
+      
+      
+      tags$hr(),
+      
+      uiOutput("CID")),
+    mainPanel(
+      plotOutput("plotind", height=300,click = "plot_click"),
+      h4("Data points"),
+      tableOutput("plot_clickedpoints1"),
+      tabsetPanel(
+        tabPanel("Reporting", downloadButton('report','Download plots .pdf')))
+    ))
+)
+
+#Server interface#
+
+server <-function(input, output, session) {
+  con<-reactive({
+    inFile <- input$file1
+    if (is.null(inFile))
+      return(NULL)
+    read.csv(inFile$datapath)
+    
+  }) 
+  
+  output$CID <- renderUI({
+    df <-con()
+    if (is.null(df)) return(NULL)
+    CID<-unique(df$CID)
+    selectInput("CID", "CID:",CID)})
+  
+  #plot ind function#
+  
+  output$plotind <- renderPlot({
+    inFile <- input$file1
+    if (is.null(inFile)==TRUE) {print(NULL) }
+    else if (is.null(inFile)==FALSE) {
+      transparent_theme <- theme(
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(), 
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.line = element_blank(),
+        panel.background = element_rect(fill = "transparent",colour = NA),
+        plot.background = element_rect(fill = "transparent",colour = NA))
+      #Create the graphs :
+      data2<-read.csv(inFile$datapath) 
+      #data2<- read.csv("W:/GSK1265744/LA200056-LATTE2/Output/PopPK.csv")
+      data2$RTFD<-as.numeric(data2$RTFD)
+      data2$CONC<-as.numeric(data2$CONC)
+      data_ <- subset(data2 , DOSE!=-99)
+      data<-subset(data_ , EVID==1)
+      
+      dat1 <- subset(data, CID==input$CID)
+      #dat1 <- subset(data, CID==1)
+      
+      newdata2 <- subset(data_ , EVID==0)
+      dat2 <- subset(newdata2, CID==input$CID)
+      #dat2 <- newdata2
+      
+      library(ggplot2)
+      p0<-ggplot(dat2, aes(x=dat2$RTFD, y=dat2$CONC)) + geom_point(shape =4) +
+        labs(x="Relative Time from First Dose (Hrs)",y="Concentration (ng/L)") 
+      p1 <- p0 + theme_bw() +
+        theme(axis.line = element_line(colour = "black"),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              panel.background = element_blank(),
+              legend.position = "none")  
+      p1 
+      
+      p2 <- ggplot(dat1, aes(x=dat1$RTFD, y=dat1$DOSE)) + geom_bar(stat = "identity", width=0.01,colour="green") +
+        transparent_theme
+      p2_grob = ggplotGrob(p2)
+      
+      p1 + annotation_custom(grob = p2_grob)
+    }})
+
+  con1<-reactive({
+    data2<-con()
+    data2$RTFD<-as.numeric(data2$RTFD)
+    data2$CONC<-as.numeric(data2$CONC)
+    data2$DOSE<-as.numeric(data2$DOSE)
+    data_ <- subset(data2 , data2$DOSE!=-99)
+    data<-subset(data_ , data_$EVID==1)
+    
+    dat1 <- subset(data, data$CID==input$CID)
+    
+    newdata2 <- subset(data_ , data_$EVID==0)
+    dat2 <- subset(newdata2, newdata2$CID==input$CID)
+    dat2
+  })
+  
+  #Hovering #
+  
+  output$plot_clickedpoints1 <- renderTable({
+    #inFile <- input$file1
+    inFile<-con()
+    
+    if (is.null(inFile)==TRUE) {print(NULL) }
+    else if (is.null(inFile)==FALSE) {
+      res <- nearPoints(con1(), input$plot_click,"RTFD","CONC", )
+      if (nrow(res) == 0)
+        return()
+      res
+    }})
+  
+  #Download Visulizations in PDF
+  output$report = downloadHandler(
+    
+    filename = 'myreport.pdf',
+    content = function(file) {
+      data <-con()
+      #install.packages("rmarkdown")
+      library(rmarkdown)
+      library(evaluate)
+      library(pander)
+      out <- render('inppk.Rmd',pdf_document())
+      file.rename(out, file) 
+    },
+    contentType = 'application/pdf'
+  )
+  
+}
+
+#Final run#
+#shinyApp(ui = ui, server = server)
+viewer <- paneViewer(300)
+runGadget( ui, server, viewer = viewer)
+}
