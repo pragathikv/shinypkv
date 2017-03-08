@@ -845,6 +845,7 @@ nm_dataviz <- function() {
 
 dose_conc_time <- function() {
   library(shiny)
+  library(miniUI)
   library(ggplot2)
   library(rmarkdown)
   library(evaluate)
