@@ -1,0 +1,67 @@
+---
+output: pdf_document
+code_folding: hide
+classoption: landscape
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+data<-con()
+#data<-read.csv("W:/GSK1265744/LA200056-LATTE2/Output/PopPK.csv")
+library(ggplot2)
+data2 <- data[order(data$CID, data$DOSE, data$RTFD), ]
+#data2 <- subset(data2, data$CID==1 )
+ plotfile <- function(data2){
+  
+  transparent_theme <- theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.x = element_blank(), 
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank(),
+    axis.line = element_blank(),
+    panel.background = element_rect(fill = "transparent",colour = NA),
+    plot.background = element_rect(fill = "transparent",colour = NA))
+  #Create the graphs :
+  #data2<-con()
+  data2$RTFD<-as.numeric(data2$RTFD)
+  data2$CONC<-as.numeric(data2$CONC)
+  data_ <- subset(data2 , DOSE!=-99)
+  data<-subset(data_ , EVID==1)
+  
+  #dat1 <- subset(data, CID==input$CID)
+  dat1 <- data
+  
+  newdata2 <- subset(data_ , EVID==0)
+  #dat2 <- subset(newdata2, CID==input$CID)
+  dat2 <- newdata2
+  
+  library(ggplot2)
+  p0<-ggplot(dat2, aes(x=dat2$RTFD, y=dat2$CONC)) + geom_point(shape =4) +
+    labs(x="Relative Time from First Dose (Hrs)",y="Concentration (ng/L)") 
+  p1 <- p0 + theme_bw() +
+    theme(axis.line = element_line(colour = "black"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          legend.position = "none")  
+  
+  p2 <- ggplot(dat1, aes(x=dat1$RTFD, y=dat1$DOSE)) + geom_bar(stat = "identity", width=0.01,colour="green") +
+    transparent_theme
+  p2_grob = ggplotGrob(p2)
+  
+  print(p1 + annotation_custom(grob = p2_grob)+ ggtitle(paste("CID = ",data2$CID)) )
+  return(plotfile)
+}
+
+
+fac <- split(data2, data2$CID)
+
+```
+
+```{r title, results='asis',fig.width=5, fig.height=6,echo=FALSE}
+#out(data2) ,fig.width=6, fig.height=7       
+
+
+invisible(lapply(fac, plotfile))
+       
