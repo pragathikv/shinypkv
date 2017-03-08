@@ -7,3 +7,8 @@ Name: nm_dataviz
 Description: NONMEM dataset visualization 
 Binding: nm_dataviz
 Interactive: true
+
+Name: dose_cvst
+Description: Conc Vs Time by Dose
+Binding: dose_cvst
+Interactive: true
