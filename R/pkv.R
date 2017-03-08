@@ -896,6 +896,7 @@ server <-function(input, output, session) {
     inFile <- input$file1
     if (is.null(inFile)==TRUE) {print(NULL) }
     else if (is.null(inFile)==FALSE) {
+      library(ggplot2)
       transparent_theme <- theme(
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
