@@ -360,7 +360,7 @@ shiny_pkv <- function(options = c("sas2csv","nm_dataviz", "none")){
     }
     shinyApp(ui = ui, server = server)
   }
-   else if(options=="dose_conc_time"){    
+   else if(options=="dose_cvst"){    
      ui <- fluidPage(
   titlePanel("Conc Vs Time by Dose"),
   sidebarLayout(
@@ -843,7 +843,7 @@ nm_dataviz <- function() {
 #shiny_pkv(options="none")
 #shiny_pkv(options="nm_dataviz")
 
-dose_conc_time <- function() {
+dose_cvst <- function() {
   library(shiny)
   library(miniUI)
   library(ggplot2)
