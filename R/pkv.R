@@ -84,7 +84,7 @@ library(DT)
         ),mainPanel( DT::dataTableOutput("contents"))
       ))
 
-    shinyApp(ui = ui, server = server)
+   shinyApp(ui = ui, server = server,options = list(launch.browser=TRUE))
   }
   else if(options=="nm_dataviz"){
     ui <- fluidPage(
@@ -360,7 +360,7 @@ library(DT)
           res
         }})
     }
-    shinyApp(ui = ui, server = server)
+   shinyApp(ui = ui, server = server,options = list(launch.browser=TRUE))
   }
    else if(options=="dose_cvst"){   
      library(ggplot2)
@@ -508,7 +508,7 @@ server <-function(input, output, session) {
 }
 
 #Final run#
-shinyApp(ui = ui, server = server)
+shinyApp(ui = ui, server = server,options = list(launch.browser=TRUE))
      }
 }
   sas2csv <- function() {
