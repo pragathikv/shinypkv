@@ -311,7 +311,7 @@ library(DT)
           }
 
           data<-data_
-          #data<-read.csv("W:/GSK2798745/TR4117387/Output/poppk_204725_19dec2016.csv")& data$MDV !=1& data$MDV !=1
+          #data<-read.csv("W:/ex/op117387/Output/poppk_204725_19dec2016.csv")& data$MDV !=1& data$MDV !=1
           data1 <- subset(data , data$dose==input$dose & data$period==input$period  )
           # data1 <- subset(data , data$DOSE==2.4 & data$PERIOD==1 & data$MDV !=1 )& data$MDV !=1
           data1$conc<-as.numeric(data1$conc)
